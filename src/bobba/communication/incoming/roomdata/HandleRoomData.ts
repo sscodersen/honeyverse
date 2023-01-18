@@ -1,7 +1,12 @@
-import ServerMessage from "../../protocol/ServerMessage";
 import IIncomingEvent from "../IIncomingEvent";
+import ServerMessage from "../../protocol/ServerMessage";
 import RoomData, { LockType } from "../../../navigator/RoomData";
 import BobbaEnvironment from "../../../BobbaEnvironment";
+import Web3 from 'web3';
+import RoomDataContract from './contracts/RoomData.json';
+
+const web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:7545'));
+const contract = new web3.eth.Contract(RoomDataContract.abi, '0x...'); // replace with the address of your deployed contract
 
 export const getRoomData = (request: ServerMessage): RoomData => {
     const id = request.popInt();
@@ -19,12 +24,6 @@ export const getRoomData = (request: ServerMessage): RoomData => {
         lockType = LockType.Password;
     }
 
-    return new RoomData(id, name, owner, description, capacity, userCount, false, lockType);
-};
-export default class HandleRoomData implements IIncomingEvent {
-    handle(request: ServerMessage) {
-        const data = getRoomData(request);
-        
-        BobbaEnvironment.getGame().navigator.handleCurrentRoomData(data);
-    }
-}
+    // store room data on the blockchain
+    contract.methods.addRoomData(id, name, owner, description, lockTypeId, userCount, capacity).send({ from: '0x...' }); // replace with the address of the user who is adding the data
+    return new RoomData(id, name, owner, description, capacity, user

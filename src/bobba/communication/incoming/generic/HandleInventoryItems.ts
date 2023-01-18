@@ -1,7 +1,5 @@
-import IIncomingEvent from "../IIncomingEvent";
-import ServerMessage from "../../protocol/ServerMessage";
-import BobbaEnvironment from "../../../BobbaEnvironment";
-import { ItemType } from "../../../imagers/furniture/FurniImager";
+import web3 from "../../../web3";
+import ItemOwnership from "../../../contracts/ItemOwnership.json";
 
 export default class HandleInventoryItems implements IIncomingEvent {
     handle(request: ServerMessage) {
@@ -12,8 +10,21 @@ export default class HandleInventoryItems implements IIncomingEvent {
             const baseId = request.popInt();
             const state = request.popInt();
             const isStackable = request.popBoolean();
-
-            BobbaEnvironment.getGame().inventory.addItem(itemId, baseId, state, isStackable, itemType);
+            
+            // add logic to check smart contract for item ownership
+            const itemOwnership = new web3.eth.Contract(ItemOwnership.abi, contractAddress);
+            itemOwnership.methods.checkOwnership(itemId).call((err, owner) => {
+                if(err) {
+                    console.log(err);
+                } else {
+                    // check if msg.sender is the owner of the item
+                    if(owner == web3.eth.defaultAccount) {
+                        BobbaEnvironment.getGame().inventory.addItem(itemId, baseId, state, isStackable, itemType);
+                    } else {
+                        console.log("You are not the owner of this item.");
+                    }
+                }
+            });
         }
     }
 }
