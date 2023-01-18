@@ -1,14 +1,10 @@
-import IIncomingEvent from "../IIncomingEvent";
-import ServerMessage from "../../protocol/ServerMessage";
-import BobbaEnvironment from "../../../BobbaEnvironment";
+import HandleRoomItemState from "./HandleRoomItemState";
+import ServerMessage from "../protocol/ServerMessage";
 
-export default class HandleRoomItemState implements IIncomingEvent {
-    handle(request: ServerMessage) {
-        const itemId = request.popInt();
-        const state = request.popInt();
-        const room = BobbaEnvironment.getGame().currentRoom;
-        if (room != null) {
-            room.roomItemManager.itemSetState(itemId, state);
-        }
-    }
-}
+const handleRoomItemState = new HandleRoomItemState();
+
+const message = new ServerMessage();
+message.appendInt(123); // item id
+message.appendInt(1); // new state
+
+handleRoomItemState.handle(message);
